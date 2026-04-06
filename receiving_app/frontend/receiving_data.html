@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receiving Data - View & Manage</title>
+    <link rel="icon" type="image/png" href="/static/image.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            padding: 15px;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #0d47a1;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        .header-text {
+            text-align: left;
+            flex: 1;
+        }
+
+        .header-text h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .header-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(66, 165, 245, 0.3);
+            border-color: #42a5f5;
+        }
+
+        .content-wrapper {
+            padding: 40px;
+        }
+
+        .filter-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .filter-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #42a5f5;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-item label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .filter-item input,
+        .filter-item select {
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 14px;
+        }
+
+        .filter-item input:focus,
+        .filter-item select:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-secondary {
+            background: #555;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #666;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-section {
+            margin-top: 30px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2a2a2a;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #333;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #42a5f5;
+            border-bottom: 2px solid #444;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #444;
+            font-size: 14px;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-accepted {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .status-rejected {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .action-cell {
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+
+        .loader {
+            border: 4px solid #444;
+            border-top: 4px solid #2196f3;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .record-count {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .defect-rate {
+            color: #ff9800;
+            font-weight: 600;
+        }
+
+        .delivery-days {
+            color: #2196f3;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav-links {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .filter-group {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>📦 Receiving Data</h1>
+                    <p>View and manage all receiving submissions</p>
+                </div>
+                <div class="nav-links">
+                    <a href="/receiving">New Receiving</a>
+                    <a href="/receiving-data" class="active">View Data</a>
+                    <a href="/supplier-dashboard">Supplier Dashboard</a>
+                    <a href="/qa">QA Form</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <div id="messageContainer"></div>
+
+            <!-- Filters -->
+            <div class="filter-section">
+                <div class="filter-title">🔍 Filter Submissions</div>
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <label>Project</label>
+                        <select id="filterProject">
+                            <option value="">All Projects</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>PO Number</label>
+                        <input type="text" id="filterPO" placeholder="Enter PO Number">
+                    </div>
+                    <div class="filter-item">
+                        <label>Supplier</label>
+                        <select id="filterSupplier">
+                            <option value="">All Suppliers</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        🔍 Apply Filters
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        🔄 Clear Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="data-section">
+                <div id="loader" class="loader"></div>
+                <div id="recordCount" class="record-count"></div>
+                
+                <div class="table-wrapper">
+                    <table id="dataTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Project</th>
+                                <th>Drawing</th>
+                                <th>PO#</th>
+                                <th>Material ID</th>
+                                <th>Supplier</th>
+                                <th>Qty Ordered</th>
+                                <th>Qty Received</th>
+                                <th>Defective</th>
+                                <th>Defect Rate</th>
+                                <th>Status</th>
+                                <th>Delivery Days</th>
+                                <th>Received Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <h2>📦 No Receiving Records Found</h2>
+                    <p>Submit your first receiving or adjust filters</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadProjects();
+            await loadSuppliers();
+            await loadData();
+        });
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const projects = await response.json();
+                const select = document.getElementById('filterProject');
+                
+                projects.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load projects:', error);
+            }
+        }
+
+        async function loadSuppliers() {
+            try {
+                const response = await fetch('/api/suppliers');
+                const suppliers = await response.json();
+                const select = document.getElementById('filterSupplier');
+                
+                suppliers.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.name;
+                    option.textContent = s.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load suppliers:', error);
+            }
+        }
+
+        async function loadData(filters = {}) {
+            const loader = document.getElementById('loader');
+            const table = document.getElementById('dataTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            loader.style.display = 'block';
+            table.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                let url = '/api/receiving-submissions?';
+                if (filters.projectId) url += `projectId=${filters.projectId}&`;
+                if (filters.poNumber) url += `poNumber=${filters.poNumber}&`;
+                if (filters.supplier) url += `supplier=${filters.supplier}&`;
+                
+                const response = await fetch(url);
+                allData = await response.json();
+                
+                renderTable(allData);
+                
+                document.getElementById('recordCount').textContent = 
+                    `Total Records: ${allData.length}`;
+                
+            } catch (error) {
+                showMessage('Failed to load data: ' + error.message, 'error');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            const table = document.getElementById('dataTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+            
+            data.forEach(row => {
+                const defectRate = row.Quantity_Received > 0 
+                    ? (row.Defective_Count / row.Quantity_Received * 100).toFixed(2)
+                    : '0.00';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.ID}</td>
+                    <td>${row.Project || 'N/A'}</td>
+                    <td>${row.Drawing || 'N/A'}</td>
+                    <td>${row.PO_Number || 'N/A'}</td>
+                    <td>${row.Material_ID || 'N/A'}</td>
+                    <td>${row.Supplier || 'N/A'}</td>
+                    <td>${row.Quantity_Ordered}</td>
+                    <td>${row.Quantity_Received}</td>
+                    <td>${row.Defective_Count}</td>
+                    <td class="defect-rate">${defectRate}%</td>
+                    <td>
+                        <span class="status-badge status-${row.Item_Status?.toLowerCase()}">
+                            ${row.Item_Status}
+                        </span>
+                    </td>
+                    <td class="delivery-days">
+                        ${row.Delivery_Days !== null ? row.Delivery_Days + ' days' : 'N/A'}
+                    </td>
+                    <td>${row.Received_Date ? new Date(row.Received_Date).toLocaleDateString() : 'N/A'}</td>
+                    <td class="action-cell">
+                        <button class="btn btn-danger" onclick="deleteRecord(${row.ID})">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyFilters() {
+            const filters = {
+                projectId: document.getElementById('filterProject').value,
+                poNumber: document.getElementById('filterPO').value,
+                supplier: document.getElementById('filterSupplier').value
+            };
+            loadData(filters);
+        }
+
+        function clearFilters() {
+            document.getElementById('filterProject').value = '';
+            document.getElementById('filterPO').value = '';
+            document.getElementById('filterSupplier').value = '';
+            loadData();
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('Are you sure you want to delete this receiving record?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/receiving-submissions/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage('✅ Record deleted successfully', 'success');
+                    await loadData();
+                } else {
+                    const error = await response.json();
+                    showMessage('❌ Error: ' + (error.detail || 'Delete failed'), 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+            
+            setTimeout(() => {
+                const msg = container.querySelector('.message');
+                if (msg) msg.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

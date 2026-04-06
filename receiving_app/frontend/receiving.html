@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receiving Form - Material Receipt</title>
+    <link rel="icon" type="image/png" href="/static/image.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            padding: 15px;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #0d47a1;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        .header-text {
+            text-align: left;
+            flex: 1;
+        }
+
+        .header-text h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header-text p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(66, 165, 245, 0.3);
+            border-color: #42a5f5;
+        }
+
+        .form-wrapper {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            background: #2a2a2a;
+            padding: 12px 15px;
+            border-left: 4px solid #2196f3;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #42a5f5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group.required label::after {
+            content: ' *';
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: #2a2a2a;
+            color: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-row.two-col {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        /* Status Radio Buttons */
+        .status-group {
+            display: flex;
+            gap: 40px;
+            margin-top: 10px;
+        }
+
+        .status-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            font-weight: 500;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+        }
+
+        .status-group input[type="radio"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #2196f3;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* File Upload Styles */
+        .file-upload-section {
+            margin-top: 20px;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            border: 2px dashed #444;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            transition: border-color 0.3s, background-color 0.3s;
+            cursor: pointer;
+            background: #2a2a2a;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-wrapper:hover {
+            border-color: #2196f3;
+            background-color: #333;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        .upload-text strong {
+            color: #2196f3;
+        }
+
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .image-preview {
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .image-preview-name {
+            padding: 8px;
+            font-size: 13px;
+            text-align: center;
+            word-break: break-all;
+            color: #aaa;
+            background: #2a2a2a;
+        }
+
+        .image-remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .image-remove-btn:hover {
+            background: #c0392b;
+        }
+
+        .packing-slip-preview {
+            max-width: 300px;
+            margin: 15px auto;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-submit {
+            background: #2196f3;
+            color: white;
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.4);
+            background: #1976d2;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-reset {
+            background: #555;
+            color: white;
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .btn-reset:hover {
+            background: #666;
+        }
+
+        /* Loading & Messages */
+        .loader {
+            display: none;
+            border: 4px solid #444;
+            border-top: 4px solid #2196f3;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .helper-text {
+            font-size: 13px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+            }
+            
+            .nav-links {
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>📦 Receiving Form</h1>
+                    <p>Material Receipt & Inspection</p>
+                </div>
+                <div class="nav-links">
+                    <a href="/receiving-data">View Data</a>
+                    <a href="/supplier-dashboard">Supplier Dashboard</a>
+                    <a href="/qa">QA Form</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-wrapper">
+            <div id="messageContainer"></div>
+            <div id="loader" class="loader"></div>
+
+            <form id="receivingForm" enctype="multipart/form-data">
+                <!-- PO Lookup Section (NEW) -->
+                <div class="form-section" style="background: #2a3f2a; padding: 20px; border-radius: 5px;">
+                    <div class="section-title" style="border-color: #4caf50; color: #81c784;">
+                        🔍 PO Lookup (Optional - Auto-fill from existing PO)
+                    </div>
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label for="poSearch">Search PO Number or Vendor</label>
+                            <input type="text" id="poSearch" placeholder="Type to search POs...">
+                            <div class="helper-text">Search existing POs to auto-populate fields</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="poSelect">Select PO</label>
+                            <select id="poSelect" disabled>
+                                <option value="">Search first...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="poItemSelect">Select PO Item</label>
+                        <select id="poItemSelect" disabled>
+                            <option value="">Select PO first...</option>
+                        </select>
+                        <div class="helper-text">Choose the specific item from the PO</div>
+                    </div>
+                    <div id="poItemDetails" style="display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                        <strong>📦 Selected Item Details:</strong>
+                        <div id="poItemInfo" style="margin-top: 10px; font-size: 14px; line-height: 1.6;"></div>
+                    </div>
+                </div>
+
+                <!-- Project & Drawing Info -->
+                <div class="form-section">
+                    <div class="section-title">📋 Project Information</div>
+                    <div class="form-row">
+                        <div class="form-group required">
+                            <label for="project">Project Number</label>
+                            <select id="project" name="project" required>
+                                <option value="">Select Project...</option>
+                            </select>
+                            <div class="helper-text">Auto-filled if PO selected above</div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="drawing">Drawing Number</label>
+                            <select id="drawing" name="drawing" required disabled>
+                                <option value="">Select Drawing...</option>
+                            </select>
+                        </div>
+                        <div class="form-group required">
+                            <label for="poNumber">PO Number</label>
+                            <input type="text" id="poNumber" name="poNumber" required 
+                                   placeholder="Enter PO Number">
+                            <div class="helper-text">Auto-filled if PO selected above</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material Information -->
+                <div class="form-section">
+                    <div class="section-title">🔧 Material Details</div>
+                    <div class="form-row">
+                        <div class="form-group required">
+                            <label for="materialId">Material ID / Description</label>
+                            <input type="text" id="materialId" name="materialId" required 
+                                   placeholder="Enter Material ID or Description">
+                            <div class="helper-text">Auto-filled if PO item selected</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="supplier">Supplier</label>
+                            <input type="text" id="supplier" name="supplier" 
+                                   placeholder="Enter Supplier Name">
+                            <div class="helper-text">Auto-filled from PO if available</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="orderDate">Order Date</label>
+                            <input type="date" id="orderDate" name="orderDate">
+                            <div class="helper-text">Auto-filled from PO if available</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantity Information -->
+                <div class="form-section">
+                    <div class="section-title">📊 Quantity & Status</div>
+                    <div class="form-row">
+                        <div class="form-group required">
+                            <label for="quantityOrdered">Quantity Ordered</label>
+                            <input type="number" id="quantityOrdered" name="quantityOrdered" 
+                                   min="0" required placeholder="0">
+                            <div class="helper-text">Auto-filled from PO if available</div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="quantityReceived">Quantity Received</label>
+                            <input type="number" id="quantityReceived" name="quantityReceived" 
+                                   min="0" required placeholder="0">
+                            <div class="helper-text">Enter actual received quantity</div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="defectiveCount">Defective Count</label>
+                            <input type="number" id="defectiveCount" name="defectiveCount" 
+                                   min="0" value="0" required placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group required">
+                        <label>Item Status</label>
+                        <div class="status-group">
+                            <label>
+                                <input type="radio" name="itemStatus" value="Accepted" checked>
+                                ✅ Accepted
+                            </label>
+                            <label>
+                                <input type="radio" name="itemStatus" value="Rejected">
+                                ❌ Rejected
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-section">
+                    <div class="section-title">📝 Additional Notes</div>
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" 
+                                  placeholder="Enter any additional notes or comments..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Packing Slip Photo -->
+                <div class="form-section">
+                    <div class="section-title">📄 Packing Slip Photo</div>
+                    <div class="file-upload-wrapper" onclick="document.getElementById('packingSlip').click()">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">
+                            <strong>Click to upload</strong> packing slip photo<br>
+                            <small>PNG, JPG, JPEG (Max 10MB)</small>
+                        </div>
+                        <input type="file" id="packingSlip" name="packingSlip" 
+                               accept="image/*" onchange="handlePackingSlipUpload(event)">
+                    </div>
+                    <div id="packingSlipPreview" class="packing-slip-preview"></div>
+                </div>
+
+                <!-- Item Photos -->
+                <div class="form-section">
+                    <div class="section-title">📸 Item Photos</div>
+                    <div class="file-upload-wrapper" onclick="document.getElementById('itemPhotos').click()">
+                        <div class="upload-icon">📸</div>
+                        <div class="upload-text">
+                            <strong>Click to upload</strong> item photos<br>
+                            <small>PNG, JPG, JPEG (Multiple files allowed)</small>
+                        </div>
+                        <input type="file" id="itemPhotos" name="itemPhotos" 
+                               accept="image/*" multiple onchange="handleItemPhotosUpload(event)">
+                    </div>
+                    <div id="itemPhotosPreview" class="image-preview-container"></div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="button-group">
+                    <button type="submit" class="btn btn-submit">
+                        📦 Submit Receiving
+                    </button>
+                    <button type="reset" class="btn btn-reset">
+                        🔄 Reset Form
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let itemPhotosFiles = [];
+        let packingSlipFile = null;
+
+        let selectedPoItemId = null; // Store the selected PO Item ID for submission
+
+        // Load projects on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadProjects();
+            
+            // Set default order date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('orderDate').value = today;
+            
+            // Setup PO search with debounce
+            setupPoSearch();
+        });
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const projects = await response.json();
+                const select = document.getElementById('project');
+                
+                projects.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                showMessage('Failed to load projects: ' + error.message, 'error');
+            }
+        }
+
+        // PO Search and Lookup Functionality
+        function setupPoSearch() {
+            const searchInput = document.getElementById('poSearch');
+            const poSelect = document.getElementById('poSelect');
+            const poItemSelect = document.getElementById('poItemSelect');
+            
+            let searchTimeout;
+            
+            // Debounced search
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+                
+                if (query.length < 2) {
+                    poSelect.innerHTML = '<option value="">Search first...</option>';
+                    poSelect.disabled = true;
+                    return;
+                }
+                
+                searchTimeout = setTimeout(async () => {
+                    await searchPos(query);
+                }, 500);
+            });
+            
+            // PO selection
+            poSelect.addEventListener('change', async (e) => {
+                const poIdentifier = e.target.value;
+                if (!poIdentifier) {
+                    poItemSelect.innerHTML = '<option value="">Select PO first...</option>';
+                    poItemSelect.disabled = true;
+                    document.getElementById('poItemDetails').style.display = 'none';
+                    return;
+                }
+                
+                await loadPoItems(poIdentifier);
+            });
+            
+            // PO Item selection
+            poItemSelect.addEventListener('change', (e) => {
+                const itemData = e.target.selectedOptions[0]?.dataset.itemData;
+                if (!itemData) {
+                    document.getElementById('poItemDetails').style.display = 'none';
+                    selectedPoItemId = null;
+                    return;
+                }
+                
+                const item = JSON.parse(itemData);
+                populateFormFromPoItem(item);
+            });
+        }
+
+        async function searchPos(query) {
+            try {
+                const response = await fetch(`/api/pos?search=${encodeURIComponent(query)}`);
+                const pos = await response.json();
+                
+                const poSelect = document.getElementById('poSelect');
+                poSelect.innerHTML = '<option value="">Select a PO...</option>';
+                
+                if (pos.length === 0) {
+                    poSelect.innerHTML = '<option value="">No POs found</option>';
+                    poSelect.disabled = true;
+                    return;
+                }
+                
+                pos.forEach(po => {
+                    const option = document.createElement('option');
+                    option.value = po.po_number;
+                    option.textContent = `${po.po_number} - ${po.vendor_name || 'Unknown Vendor'}`;
+                    poSelect.appendChild(option);
+                });
+                
+                poSelect.disabled = false;
+            } catch (error) {
+                showMessage('Failed to search POs: ' + error.message, 'error');
+            }
+        }
+
+        async function loadPoItems(poIdentifier) {
+            try {
+                const response = await fetch(`/api/pos/${encodeURIComponent(poIdentifier)}/items`);
+                const items = await response.json();
+                
+                const poItemSelect = document.getElementById('poItemSelect');
+                poItemSelect.innerHTML = '<option value="">Select an item...</option>';
+                
+                if (items.length === 0) {
+                    poItemSelect.innerHTML = '<option value="">No items found</option>';
+                    poItemSelect.disabled = true;
+                    return;
+                }
+                
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.item_id;
+                    
+                    // Build display text
+                    const partInfo = item.part || 'Unknown Part';
+                    const modifier = item.modifier ? ` - ${item.modifier}` : '';
+                    const qtyInfo = `Qty: ${item.qty_ordered || 0}`;
+                    
+                    option.textContent = `${partInfo}${modifier} (${qtyInfo})`;
+                    option.dataset.itemData = JSON.stringify(item);
+                    
+                    poItemSelect.appendChild(option);
+                });
+                
+                poItemSelect.disabled = false;
+            } catch (error) {
+                showMessage('Failed to load PO items: ' + error.message, 'error');
+            }
+        }
+
+        function populateFormFromPoItem(item) {
+            selectedPoItemId = item.item_id;
+            
+            // Display item details
+            const detailsDiv = document.getElementById('poItemDetails');
+            const infoDiv = document.getElementById('poItemInfo');
+            
+            let detailsHtml = `
+                <div><strong>Part:</strong> ${item.part || 'N/A'}</div>
+            `;
+            
+            if (item.modifier) {
+                detailsHtml += `<div><strong>Description:</strong> ${item.modifier}</div>`;
+            }
+            
+            detailsHtml += `
+                <div><strong>Qty Ordered:</strong> ${item.qty_ordered || 0}</div>
+                <div><strong>Qty Received:</strong> ${item.qty_received || 0}</div>
+                <div><strong>Remaining:</strong> ${(item.qty_ordered || 0) - (item.qty_received || 0)}</div>
+            `;
+            
+            if (item.project) {
+                detailsHtml += `<div><strong>Project:</strong> ${item.project}</div>`;
+            }
+            
+            if (item.drawing) {
+                detailsHtml += `<div><strong>Drawing:</strong> ${item.drawing}</div>`;
+            }
+            
+            if (item.eta) {
+                detailsHtml += `<div><strong>ETA:</strong> ${item.eta}</div>`;
+            }
+            
+            infoDiv.innerHTML = detailsHtml;
+            detailsDiv.style.display = 'block';
+            
+            // Auto-populate form fields
+            // PO Number
+            document.getElementById('poNumber').value = item.po_number || '';
+            
+            // Material ID (use Part + Modifier)
+            const materialDesc = item.modifier ? `${item.part} - ${item.modifier}` : item.part;
+            document.getElementById('materialId').value = materialDesc || '';
+            
+            // Supplier
+            if (item.vendor_name) {
+                document.getElementById('supplier').value = item.vendor_name;
+            }
+            
+            // Quantities
+            document.getElementById('quantityOrdered').value = item.qty_ordered || 0;
+            
+            // Order date (use PO date or ETA)
+            if (item.po_date) {
+                const orderDate = new Date(item.po_date).toISOString().split('T')[0];
+                document.getElementById('orderDate').value = orderDate;
+            }
+            
+            // Project (if available and matches dropdown)
+            if (item.project) {
+                const projectSelect = document.getElementById('project');
+                const matchingOption = Array.from(projectSelect.options).find(
+                    opt => opt.textContent.includes(item.project)
+                );
+                if (matchingOption) {
+                    projectSelect.value = matchingOption.value;
+                    projectSelect.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            showMessage('✅ Form auto-populated from PO item', 'success');
+        }
+
+        document.getElementById('project').addEventListener('change', async (e) => {
+            const projectId = e.target.value;
+            const drawingSelect = document.getElementById('drawing');
+            
+            drawingSelect.innerHTML = '<option value="">Select Drawing...</option>';
+            drawingSelect.disabled = !projectId;
+            
+            if (projectId) {
+                try {
+                    const response = await fetch(`/api/drawings?projectId=${projectId}`);
+                    const drawings = await response.json();
+                    
+                    drawings.forEach(d => {
+                        const option = document.createElement('option');
+                        option.value = d.name;
+                        option.textContent = d.name;
+                        drawingSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    showMessage('Failed to load drawings: ' + error.message, 'error');
+                }
+            }
+        });
+
+        function handlePackingSlipUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            packingSlipFile = file;
+            const preview = document.getElementById('packingSlipPreview');
+            preview.innerHTML = '';
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'image-preview';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Packing Slip">
+                    <div class="image-preview-name">${file.name}</div>
+                    <button type="button" class="image-remove-btn" onclick="removePackingSlip()">×</button>
+                `;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePackingSlip() {
+            packingSlipFile = null;
+            document.getElementById('packingSlip').value = '';
+            document.getElementById('packingSlipPreview').innerHTML = '';
+        }
+
+        function handleItemPhotosUpload(event) {
+            const files = Array.from(event.target.files);
+            itemPhotosFiles = itemPhotosFiles.concat(files);
+            renderItemPhotos();
+        }
+
+        function renderItemPhotos() {
+            const container = document.getElementById('itemPhotosPreview');
+            container.innerHTML = '';
+            
+            itemPhotosFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'image-preview';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Item Photo">
+                        <div class="image-preview-name">${file.name}</div>
+                        <button type="button" class="image-remove-btn" onclick="removeItemPhoto(${index})">×</button>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeItemPhoto(index) {
+            itemPhotosFiles.splice(index, 1);
+            renderItemPhotos();
+        }
+
+        document.getElementById('receivingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('.btn-submit');
+            const loader = document.getElementById('loader');
+            
+            submitBtn.disabled = true;
+            loader.style.display = 'block';
+            
+            try {
+                const formData = new FormData();
+                
+                // Add form fields
+                formData.append('project', document.getElementById('project').value);
+                formData.append('drawing', document.getElementById('drawing').value);
+                formData.append('poNumber', document.getElementById('poNumber').value);
+                formData.append('materialId', document.getElementById('materialId').value);
+                formData.append('supplier', document.getElementById('supplier').value);
+                formData.append('quantityOrdered', document.getElementById('quantityOrdered').value);
+                formData.append('quantityReceived', document.getElementById('quantityReceived').value);
+                formData.append('defectiveCount', document.getElementById('defectiveCount').value);
+                formData.append('itemStatus', document.querySelector('input[name="itemStatus"]:checked').value);
+                formData.append('orderDate', document.getElementById('orderDate').value);
+                formData.append('notes', document.getElementById('notes').value);
+                
+                // Add PO Item ID if selected from lookup
+                if (selectedPoItemId) {
+                    formData.append('poItemId', selectedPoItemId);
+                }
+                
+                // Add packing slip
+                if (packingSlipFile) {
+                    formData.append('packingSlip', packingSlipFile);
+                }
+                
+                // Add item photos
+                itemPhotosFiles.forEach(file => {
+                    formData.append('itemPhotos', file);
+                });
+                
+                const response = await fetch('/api/receiving-submissions', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`✅ Receiving submitted successfully! ID: ${result.receiving_id}`, 'success');
+                    e.target.reset();
+                    itemPhotosFiles = [];
+                    packingSlipFile = null;
+                    selectedPoItemId = null;
+                    document.getElementById('itemPhotosPreview').innerHTML = '';
+                    document.getElementById('packingSlipPreview').innerHTML = '';
+                    document.getElementById('drawing').disabled = true;
+                    document.getElementById('poSelect').disabled = true;
+                    document.getElementById('poItemSelect').disabled = true;
+                    document.getElementById('poItemDetails').style.display = 'none';
+                    document.getElementById('poSelect').innerHTML = '<option value="">Search first...</option>';
+                    document.getElementById('poItemSelect').innerHTML = '<option value="">Select PO first...</option>';
+                    
+                    // Reset to today's date
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('orderDate').value = today;
+                } else {
+                    showMessage('❌ Error: ' + (result.detail || 'Submission failed'), 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                loader.style.display = 'none';
+            }
+        });
+
+        function showMessage(text, type) {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+            
+            setTimeout(() => {
+                const msg = container.querySelector('.message');
+                if (msg) msg.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
