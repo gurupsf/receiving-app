@@ -1,40 +1,61 @@
 #!/bin/bash
+set -euo pipefail
 
-# QA Form Application - HTTPS Startup Script
-# This script runs the FastAPI server with self-signed SSL certificate
+# Receiving App HTTPS startup script.
+# Uses SSL_KEYFILE / SSL_CERTFILE when provided, otherwise creates a local
+# self-signed certificate outside the repo in /tmp.
 
-cd /home/guru/qa_app
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$APP_DIR"
 
 # Activate virtual environment
-source /home/guru/qa_app/env/bin/activate
+source "$APP_DIR/env/bin/activate"
 
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║       QA Form Application - HTTPS Server                   ║"
-echo "╚════════════════════════════════════════════════════════════╝"
+IP="$(hostname -I | awk '{print $1}')"
+IP="${IP:-127.0.0.1}"
+PORT="${PORT:-8000}"
+
+SSL_KEYFILE="${SSL_KEYFILE:-}"
+SSL_CERTFILE="${SSL_CERTFILE:-}"
+SSL_DIR="${SSL_DIR:-/tmp/receiving_app_ssl}"
+
+if [[ -z "$SSL_KEYFILE" || -z "$SSL_CERTFILE" ]]; then
+    mkdir -p "$SSL_DIR"
+    SSL_KEYFILE="$SSL_DIR/key.pem"
+    SSL_CERTFILE="$SSL_DIR/cert.pem"
+
+    if [[ ! -f "$SSL_KEYFILE" || ! -f "$SSL_CERTFILE" ]]; then
+        if ! command -v openssl >/dev/null 2>&1; then
+            echo "OpenSSL is required to generate a local development certificate."
+            echo "Set SSL_KEYFILE and SSL_CERTFILE to existing files or install openssl."
+            exit 1
+        fi
+
+        openssl req \
+            -x509 \
+            -nodes \
+            -days 365 \
+            -newkey rsa:2048 \
+            -keyout "$SSL_KEYFILE" \
+            -out "$SSL_CERTFILE" \
+            -subj "/CN=${IP}" >/dev/null 2>&1
+    fi
+fi
+
+echo "=============================================="
+echo "Receiving App HTTPS Server"
+echo "=============================================="
+echo "Server Address: https://${IP}:${PORT}/receiving"
+echo "SSL Key: ${SSL_KEYFILE}"
+echo "SSL Cert: ${SSL_CERTFILE}"
 echo ""
-echo "🔒 Starting with SSL/TLS (Self-signed certificate)"
+echo "Self-signed certificates will trigger a browser warning in development."
 echo ""
 
-# Get IP address
-IP=$(hostname -I | awk '{print $1}')
-PORT=8000
-
-echo "📍 Server Address: https://${IP}:${PORT}/qa"
-echo "⚠️  Note: Browser will show SSL warning (self-signed cert - this is normal)"
-echo ""
-echo "To proceed in browser:"
-echo "  • Chrome/Edge: Click 'Advanced' → 'Proceed to...' "
-echo "  • Firefox: Click 'Accept Risk and Continue'"
-echo ""
-echo "Starting server..."
-echo ""
-
-# Run uvicorn with SSL certificate and private key
-# Using http11-only to avoid ALPN negotiation issues with self-signed certs
 uvicorn backend.main:app \
     --reload \
     --host 0.0.0.0 \
-    --port 8000 \
-    --ssl-keyfile=/home/guru/qa_app/key.pem \
-    --ssl-certfile=/home/guru/qa_app/cert.pem \
+    --port "$PORT" \
+    --ssl-keyfile="$SSL_KEYFILE" \
+    --ssl-certfile="$SSL_CERTFILE" \
     --http=h11

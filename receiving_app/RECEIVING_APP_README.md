@@ -136,6 +136,9 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ./run_with_ssl.sh
 ```
 
+`run_with_ssl.sh` uses `SSL_KEYFILE` and `SSL_CERTFILE` when provided.
+If they are not set, it generates a local self-signed certificate in `/tmp/receiving_app_ssl`.
+
 ## API Endpoints
 
 ### Receiving Endpoints
@@ -170,23 +173,10 @@ Each PDF contains:
 
 ## Navigation
 
-The app includes integrated navigation between:
-- QA Form (`/qa`)
-- QA Data (`/qa-data`)
+The app includes navigation between:
 - Receiving Form (`/receiving`)
 - Receiving Data (`/receiving-data`)
 - Supplier Dashboard (`/supplier-dashboard`)
-
-## Key Differences from QA App
-
-| Feature | QA App | Receiving App |
-|---------|--------|---------------|
-| Primary Focus | Quality inspection | Material receiving |
-| Status Types | Pass/Fail | Accepted/Rejected |
-| Key Metrics | Issue categories | Quantity, Defects, Delivery time |
-| Photo Types | Generic item photos | Packing slip + Item photos (separate) |
-| Analytics | None | Supplier dashboard with KPIs |
-| Tracking | Per elevation/room | Per PO/Material |
 
 ## Usage Workflow
 
@@ -251,7 +241,7 @@ For issues or questions, check:
 
 ## Architecture
 
-Built using the same proven architecture as the QA app:
+Built with a simple FastAPI + SQL Server stack:
 - **Backend**: FastAPI with SQLAlchemy
 - **Database**: SQL Server with computed columns and views
 - **Frontend**: Vanilla HTML/CSS/JavaScript with Chart.js

@@ -278,6 +278,11 @@
             color: #e74c3c;
         }
 
+        .status-unknown {
+            background: rgba(170, 170, 170, 0.2);
+            color: #aaa;
+        }
+
         .action-cell {
             text-align: center;
         }
@@ -366,7 +371,6 @@
                     <a href="/receiving">New Receiving</a>
                     <a href="/receiving-data" class="active">View Data</a>
                     <a href="/supplier-dashboard">Supplier Dashboard</a>
-                    <a href="/qa">QA Form</a>
                 </div>
             </div>
         </div>
@@ -445,6 +449,23 @@
 
     <script>
         let allData = [];
+
+        function formatText(value, fallback = 'N/A') {
+            if (value === null || value === undefined || value === '') {
+                return fallback;
+            }
+            return String(value);
+        }
+
+        function appendCell(row, text, className = '') {
+            const cell = document.createElement('td');
+            if (className) {
+                cell.className = className;
+            }
+            cell.textContent = text;
+            row.appendChild(cell);
+            return cell;
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadProjects();
@@ -533,37 +554,60 @@
             emptyState.style.display = 'none';
             
             data.forEach(row => {
-                const defectRate = row.Quantity_Received > 0 
-                    ? (row.Defective_Count / row.Quantity_Received * 100).toFixed(2)
+                const quantityReceived = Number(row.Quantity_Received || 0);
+                const defectCount = Number(row.Defective_Count || 0);
+                const defectRate = quantityReceived > 0
+                    ? (defectCount / quantityReceived * 100).toFixed(2)
                     : '0.00';
-                
+                const statusValue = row.Item_Status === 'Accepted'
+                    ? 'Accepted'
+                    : row.Item_Status === 'Rejected'
+                        ? 'Rejected'
+                        : formatText(row.Item_Status, 'Unknown');
+                const statusClass = statusValue === 'Accepted'
+                    ? 'status-accepted'
+                    : statusValue === 'Rejected'
+                        ? 'status-rejected'
+                        : 'status-unknown';
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.ID}</td>
-                    <td>${row.Project || 'N/A'}</td>
-                    <td>${row.Drawing || 'N/A'}</td>
-                    <td>${row.PO_Number || 'N/A'}</td>
-                    <td>${row.Material_ID || 'N/A'}</td>
-                    <td>${row.Supplier || 'N/A'}</td>
-                    <td>${row.Quantity_Ordered}</td>
-                    <td>${row.Quantity_Received}</td>
-                    <td>${row.Defective_Count}</td>
-                    <td class="defect-rate">${defectRate}%</td>
-                    <td>
-                        <span class="status-badge status-${row.Item_Status?.toLowerCase()}">
-                            ${row.Item_Status}
-                        </span>
-                    </td>
-                    <td class="delivery-days">
-                        ${row.Delivery_Days !== null ? row.Delivery_Days + ' days' : 'N/A'}
-                    </td>
-                    <td>${row.Received_Date ? new Date(row.Received_Date).toLocaleDateString() : 'N/A'}</td>
-                    <td class="action-cell">
-                        <button class="btn btn-danger" onclick="deleteRecord(${row.ID})">
-                            🗑️ Delete
-                        </button>
-                    </td>
-                `;
+
+                appendCell(tr, formatText(row.ID));
+                appendCell(tr, formatText(row.Project));
+                appendCell(tr, formatText(row.Drawing));
+                appendCell(tr, formatText(row.PO_Number));
+                appendCell(tr, formatText(row.Material_ID));
+                appendCell(tr, formatText(row.Supplier));
+                appendCell(tr, formatText(row.Quantity_Ordered, '0'));
+                appendCell(tr, formatText(row.Quantity_Received, '0'));
+                appendCell(tr, formatText(row.Defective_Count, '0'));
+                appendCell(tr, `${defectRate}%`, 'defect-rate');
+
+                const statusCell = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.className = `status-badge ${statusClass}`;
+                statusBadge.textContent = statusValue;
+                statusCell.appendChild(statusBadge);
+                tr.appendChild(statusCell);
+
+                const deliveryText = row.Delivery_Days !== null && row.Delivery_Days !== undefined
+                    ? `${row.Delivery_Days} days`
+                    : 'N/A';
+                appendCell(tr, deliveryText, 'delivery-days');
+                appendCell(
+                    tr,
+                    row.Received_Date ? new Date(row.Received_Date).toLocaleDateString() : 'N/A'
+                );
+
+                const actionCell = document.createElement('td');
+                actionCell.className = 'action-cell';
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-danger';
+                deleteButton.type = 'button';
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteRecord(row.ID));
+                actionCell.appendChild(deleteButton);
+                tr.appendChild(actionCell);
+
                 tbody.appendChild(tr);
             });
         }
@@ -608,11 +652,17 @@
 
         function showMessage(text, type) {
             const container = document.getElementById('messageContainer');
-            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+            container.innerHTML = '';
+
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.appendChild(message);
             
             setTimeout(() => {
-                const msg = container.querySelector('.message');
-                if (msg) msg.style.display = 'none';
+                if (message.isConnected) {
+                    message.style.display = 'none';
+                }
             }, 5000);
         }
     </script>

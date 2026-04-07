@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import re
 from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -52,6 +53,28 @@ FRONTEND_DIR = Path(__file__).resolve().parents[1] / "frontend"
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
 
+def _storage_segment(value: str, fallback: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", str(value).strip())
+    cleaned = cleaned.strip("._")
+    if not cleaned or cleaned in {".", ".."}:
+        return fallback
+    return cleaned
+
+
+def _project_storage_dir(base_dir: Path, project: str) -> Path:
+    return base_dir / f"project_{_storage_segment(project, 'project')}"
+
+
+def _po_storage_dir(base_dir: Path, project: str, po_number: str) -> Path:
+    return _project_storage_dir(base_dir, project) / f"po_{_storage_segment(po_number, 'po')}"
+
+
+def _receiving_pdf_url(project: str, po_number: str, pdf_name: str) -> str:
+    project_key = _storage_segment(project, "project")
+    po_key = _storage_segment(po_number, "po")
+    return f"/pdfs/{project_key}/{po_key}/{pdf_name}"
+
+
 @app.get("/api/projects")
 def api_projects():
     try:
@@ -67,12 +90,32 @@ def api_drawings(projectId: str = Query(..., description="Project ID")):
         raise HTTPException(500, f"Failed to fetch drawings: {e}")
 
 
+@app.get("/pdfs/{project_id}/{po_number}/{pdf_name}")
+async def get_receiving_pdf(project_id: str, po_number: str, pdf_name: str):
+    pdf_dir = Path(os.getenv("PDF_STORAGE_DIR", "./pdfs")).resolve()
+    pdf_path = (
+        pdf_dir
+        / f"project_{_storage_segment(project_id, 'project')}"
+        / f"po_{_storage_segment(po_number, 'po')}"
+        / pdf_name
+    )
+    if pdf_path.is_file():
+        return FileResponse(pdf_path, media_type="application/pdf")
+    raise HTTPException(404, "PDF not found")
+
+
 @app.get("/pdfs/{project_id}/{pdf_name}")
 async def get_pdf(project_id: str, pdf_name: str):
     pdf_dir = Path(os.getenv("PDF_STORAGE_DIR", "./pdfs")).resolve()
-    pdf_path = pdf_dir / f"project_{project_id}" / pdf_name
-    if pdf_path.exists():
-        return FileResponse(pdf_path, media_type="application/pdf")
+    project_dir = pdf_dir / f"project_{_storage_segment(project_id, 'project')}"
+    direct_path = project_dir / pdf_name
+    if direct_path.is_file():
+        return FileResponse(direct_path, media_type="application/pdf")
+
+    for pdf_path in project_dir.rglob(pdf_name):
+        if pdf_path.is_file():
+            return FileResponse(pdf_path, media_type="application/pdf")
+
     raise HTTPException(404, "PDF not found")
 
 
@@ -90,11 +133,9 @@ async def get_pdf_legacy(pdf_name: str):
     
 
     # Search in project subdirectories
-    for project_folder in pdf_dir.glob("project_*"):
-        if project_folder.is_dir():
-            pdf_path = project_folder / pdf_name
-            if pdf_path.exists():
-                return FileResponse(pdf_path, media_type="application/pdf")
+    for pdf_path in pdf_dir.rglob(pdf_name):
+        if pdf_path.is_file():
+            return FileResponse(pdf_path, media_type="application/pdf")
     
 
     raise HTTPException(404, "PDF not found")
@@ -170,15 +211,15 @@ async def api_receiving_submit(
     drawing: str = Form(...),
     poNumber: str = Form(...),
     materialId: str = Form(...),
-    supplier: str = Form(None),
+    supplier: Optional[str] = Form(None),
     quantityOrdered: int = Form(...),
     quantityReceived: int = Form(...),
     defectiveCount: int = Form(0),
     itemStatus: str = Form(...),
-    orderDate: str = Form(None),  # ISO date string
-    notes: str = Form(None),
-    poItemId: int = Form(None),  # Link to PO_Item table
-    packingSlip: UploadFile = File(None),
+    orderDate: Optional[str] = Form(None),  # ISO date string
+    notes: Optional[str] = Form(None),
+    poItemId: Optional[int] = Form(None),  # Link to PO_Item table
+    packingSlip: Optional[UploadFile] = File(None),
     itemPhotos: List[UploadFile] = File(default=[])
 ):
     """
@@ -212,7 +253,7 @@ async def api_receiving_submit(
             try:
                 from dateutil import parser
                 order_date_obj = parser.parse(orderDate)
-            except:
+            except Exception:
                 logger.warning(f"Could not parse order date: {orderDate}")
         
         # Prepare payload for database insertion
@@ -253,7 +294,8 @@ async def api_receiving_submit(
                     logger.info(f"Item photo processed: {photo.filename}")
         
         # Generate PDF with all form data and images
-        pdf_dir = Path(os.getenv("PDF_STORAGE_DIR", "./pdfs")).resolve() / f"project_{project}" / f"po_{poNumber}"
+        pdf_base_dir = Path(os.getenv("PDF_STORAGE_DIR", "./pdfs")).resolve()
+        pdf_dir = _po_storage_dir(pdf_base_dir, project, poNumber)
         pdf_dir.mkdir(parents=True, exist_ok=True)
         tz_ny = ZoneInfo("America/New_York")
         
@@ -294,6 +336,7 @@ async def api_receiving_submit(
             "ok": True,
             "receiving_id": receiving_id,
             "pdf_path": str(pdf_path),
+            "pdf_url": _receiving_pdf_url(project, poNumber, pdf_path.name),
             "packing_slip": 1 if packing_slip_data else 0,
             "item_photos_count": len(item_images_data)
         }
@@ -331,20 +374,27 @@ def api_delete_receiving_submission(receiving_id: int):
         if not result:
             raise HTTPException(404, "Receiving submission not found")
         
-        # Delete associated PDF files
+        # Delete only the PDFs associated with this submission.
         pdf_dir = Path(os.getenv("PDF_STORAGE_DIR", "./pdfs")).resolve()
         project = result["project"]
         po_number = result["po_number"]
-        project_dir = pdf_dir / f"project_{project}"
-        po_dir = project_dir / f"po_{po_number}"
-        
+        project_dir = _project_storage_dir(pdf_dir, project)
+        po_dir = _po_storage_dir(pdf_dir, project, po_number)
+
         try:
             if po_dir.exists():
-                import shutil
-                shutil.rmtree(po_dir)
-                logger.info(f"Deleted PDF directory: {po_dir}")
-            
-            # Check if project directory is now empty and delete it too
+                deleted_files = 0
+                for pdf_path in po_dir.glob(f"Receiving_{receiving_id}_*.pdf"):
+                    pdf_path.unlink(missing_ok=True)
+                    deleted_files += 1
+
+                if deleted_files:
+                    logger.info(f"Deleted {deleted_files} PDF(s) from: {po_dir}")
+
+            if po_dir.exists() and not any(po_dir.iterdir()):
+                po_dir.rmdir()
+                logger.info(f"Deleted empty PO directory: {po_dir}")
+
             if project_dir.exists() and not any(project_dir.iterdir()):
                 project_dir.rmdir()
                 logger.info(f"Deleted empty project directory: {project_dir}")
@@ -429,4 +479,3 @@ def api_get_po_items(po_identifier: str):
     except Exception as e:
         logger.error(f"Failed to fetch PO items: {str(e)}", exc_info=True)
         raise HTTPException(500, f"Failed to fetch PO items: {e}")
-

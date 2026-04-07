@@ -407,7 +407,6 @@
                 <div class="nav-links">
                     <a href="/receiving-data">View Data</a>
                     <a href="/supplier-dashboard">Supplier Dashboard</a>
-                    <a href="/qa">QA Form</a>
                 </div>
             </div>
         </div>
@@ -592,8 +591,17 @@
     <script>
         let itemPhotosFiles = [];
         let packingSlipFile = null;
-
         let selectedPoItemId = null; // Store the selected PO Item ID for submission
+        let pendingDrawingSelection = null;
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
 
         // Load projects on page load
         window.addEventListener('DOMContentLoaded', async () => {
@@ -743,31 +751,36 @@
             // Display item details
             const detailsDiv = document.getElementById('poItemDetails');
             const infoDiv = document.getElementById('poItemInfo');
+            const partLabel = escapeHtml(item.part || 'N/A');
+            const descriptionLabel = escapeHtml(item.modifier || '');
+            const projectLabel = escapeHtml(item.project || '');
+            const drawingLabel = escapeHtml(item.drawing || '');
+            const etaLabel = escapeHtml(item.eta || '');
             
             let detailsHtml = `
-                <div><strong>Part:</strong> ${item.part || 'N/A'}</div>
+                <div><strong>Part:</strong> ${partLabel}</div>
             `;
             
             if (item.modifier) {
-                detailsHtml += `<div><strong>Description:</strong> ${item.modifier}</div>`;
+                detailsHtml += `<div><strong>Description:</strong> ${descriptionLabel}</div>`;
             }
             
             detailsHtml += `
-                <div><strong>Qty Ordered:</strong> ${item.qty_ordered || 0}</div>
-                <div><strong>Qty Received:</strong> ${item.qty_received || 0}</div>
-                <div><strong>Remaining:</strong> ${(item.qty_ordered || 0) - (item.qty_received || 0)}</div>
+                <div><strong>Qty Ordered:</strong> ${Number(item.qty_ordered || 0)}</div>
+                <div><strong>Qty Received:</strong> ${Number(item.qty_received || 0)}</div>
+                <div><strong>Remaining:</strong> ${Number(item.qty_remaining ?? ((item.qty_ordered || 0) - (item.qty_received || 0)))}</div>
             `;
             
             if (item.project) {
-                detailsHtml += `<div><strong>Project:</strong> ${item.project}</div>`;
+                detailsHtml += `<div><strong>Project:</strong> ${projectLabel}</div>`;
             }
             
             if (item.drawing) {
-                detailsHtml += `<div><strong>Drawing:</strong> ${item.drawing}</div>`;
+                detailsHtml += `<div><strong>Drawing:</strong> ${drawingLabel}</div>`;
             }
             
             if (item.eta) {
-                detailsHtml += `<div><strong>ETA:</strong> ${item.eta}</div>`;
+                detailsHtml += `<div><strong>ETA:</strong> ${etaLabel}</div>`;
             }
             
             infoDiv.innerHTML = detailsHtml;
@@ -796,13 +809,16 @@
             }
             
             // Project (if available and matches dropdown)
-            if (item.project) {
+            if (item.project_id || item.project) {
                 const projectSelect = document.getElementById('project');
-                const matchingOption = Array.from(projectSelect.options).find(
-                    opt => opt.textContent.includes(item.project)
-                );
+                const projectValue = item.project_id || item.project;
+                const matchingOption = Array.from(projectSelect.options).find((opt) => opt.value === projectValue);
                 if (matchingOption) {
-                    projectSelect.value = matchingOption.value;
+                    pendingDrawingSelection = {
+                        id: item.drawing_id || '',
+                        name: item.drawing || ''
+                    };
+                    projectSelect.value = projectValue;
                     projectSelect.dispatchEvent(new Event('change'));
                 }
             }
@@ -826,8 +842,23 @@
                         const option = document.createElement('option');
                         option.value = d.name;
                         option.textContent = d.name;
+                        option.dataset.drawingId = d.id;
                         drawingSelect.appendChild(option);
                     });
+
+                    if (pendingDrawingSelection) {
+                        const matchingOption = Array.from(drawingSelect.options).find((option) =>
+                            option.dataset.drawingId === pendingDrawingSelection.id
+                            || option.value === pendingDrawingSelection.name
+                            || option.textContent === pendingDrawingSelection.name
+                        );
+
+                        if (matchingOption) {
+                            drawingSelect.value = matchingOption.value;
+                        }
+
+                        pendingDrawingSelection = null;
+                    }
                 } catch (error) {
                     showMessage('Failed to load drawings: ' + error.message, 'error');
                 }
@@ -848,7 +879,7 @@
                 div.className = 'image-preview';
                 div.innerHTML = `
                     <img src="${e.target.result}" alt="Packing Slip">
-                    <div class="image-preview-name">${file.name}</div>
+                    <div class="image-preview-name">${escapeHtml(file.name)}</div>
                     <button type="button" class="image-remove-btn" onclick="removePackingSlip()">×</button>
                 `;
                 preview.appendChild(div);
@@ -879,7 +910,7 @@
                     div.className = 'image-preview';
                     div.innerHTML = `
                         <img src="${e.target.result}" alt="Item Photo">
-                        <div class="image-preview-name">${file.name}</div>
+                        <div class="image-preview-name">${escapeHtml(file.name)}</div>
                         <button type="button" class="image-remove-btn" onclick="removeItemPhoto(${index})">×</button>
                     `;
                     container.appendChild(div);
@@ -971,11 +1002,17 @@
 
         function showMessage(text, type) {
             const container = document.getElementById('messageContainer');
-            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+            container.innerHTML = '';
+
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.appendChild(message);
             
             setTimeout(() => {
-                const msg = container.querySelector('.message');
-                if (msg) msg.style.display = 'none';
+                if (message.isConnected) {
+                    message.style.display = 'none';
+                }
             }, 5000);
         }
     </script>

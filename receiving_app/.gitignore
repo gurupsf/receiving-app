@@ -1,2 +1,8 @@
 pdfs/
 .env
+__pycache__/
+*.pyc
+fastapi.log
+cert.pem
+key.pem
+.ssl/

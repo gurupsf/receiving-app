@@ -1,7 +1,6 @@
 # Quick Setup Guide for Receiving App
 
 ## Prerequisites
-✅ QA app is already installed and working  
 ✅ Virtual environment is activated  
 ✅ Database connection is configured in `.env`
 
@@ -21,7 +20,7 @@ This will create:
 - Necessary indexes
 
 ### Step 2: Verify Backend Code
-All backend code has been added to existing files:
+All backend code should be present in:
 - ✅ `backend/db.py` - Receiving database functions
 - ✅ `backend/main.py` - Receiving API routes
 - ✅ `backend/pdf_generator.py` - Receiving PDF generator
@@ -37,7 +36,7 @@ New HTML files created:
 # Start the server (if not already running)
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
-# Or with SSL
+# Or with local HTTPS
 ./run_with_ssl.sh
 ```
 
@@ -51,9 +50,6 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 3. **Supplier Dashboard**:  
    http://YOUR_IP:8000/supplier-dashboard
-
-4. **Original QA Form** (still works):  
-   http://YOUR_IP:8000/qa
 
 ## Test Workflow
 
@@ -147,21 +143,14 @@ After setup, verify:
 - [ ] Delete functionality works
 - [ ] Filters work correctly
 
-## Integration with QA App
-
-Both apps share:
-- Same backend (`backend/main.py`)
-- Same database connection
-- Same virtual environment
-- Same PDF storage directory
-- Navigation links between apps
+## Navigation
 
 Navigation flow:
 ```
-QA Form ←→ QA Data ←→ Receiving Form ←→ Receiving Data ←→ Supplier Dashboard
+Receiving Form ←→ Receiving Data ←→ Supplier Dashboard
 ```
 
-All pages have navigation links in the header for easy switching.
+All pages include navigation links in the header for easy switching.
 
 ## Next Steps
 

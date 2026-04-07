@@ -295,7 +295,6 @@
                     <a href="/receiving">New Receiving</a>
                     <a href="/receiving-data">View Data</a>
                     <a href="/supplier-dashboard" class="active">Supplier Dashboard</a>
-                    <a href="/qa">QA Form</a>
                 </div>
             </div>
         </div>
@@ -412,6 +411,14 @@
     <script>
         let deliveryChart, defectChart, ordersChart;
 
+        function formatMetric(value, digits = 2, fallback = '0.00') {
+            const numericValue = Number(value);
+            if (Number.isFinite(numericValue)) {
+                return numericValue.toFixed(digits);
+            }
+            return fallback;
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             await loadDashboard();
         });
@@ -431,10 +438,12 @@
                 }
 
                 // Calculate summary metrics
-                const totalOrders = kpis.reduce((sum, k) => sum + k.Total_Orders, 0);
-                const avgDeliveryDays = (kpis.reduce((sum, k) => sum + (k.Avg_Delivery_Days || 0), 0) / kpis.length).toFixed(1);
-                const totalQty = kpis.reduce((sum, k) => sum + k.Total_Quantity_Received, 0);
-                const totalDefective = kpis.reduce((sum, k) => sum + k.Total_Defective, 0);
+                const totalOrders = kpis.reduce((sum, k) => sum + Number(k.Total_Orders || 0), 0);
+                const avgDeliveryDays = (
+                    kpis.reduce((sum, k) => sum + Number(k.Avg_Delivery_Days || 0), 0) / kpis.length
+                ).toFixed(1);
+                const totalQty = kpis.reduce((sum, k) => sum + Number(k.Total_Quantity_Received || 0), 0);
+                const totalDefective = kpis.reduce((sum, k) => sum + Number(k.Total_Defective || 0), 0);
                 const overallDefectRate = totalQty > 0 ? ((totalDefective / totalQty) * 100).toFixed(2) : '0.00';
 
                 // Update summary cards
@@ -465,12 +474,12 @@
 
         function renderCharts(kpis) {
             // Sort suppliers alphabetically
-            const sortedKpis = [...kpis].sort((a, b) => a.Supplier.localeCompare(b.Supplier));
+            const sortedKpis = [...kpis].sort((a, b) => (a.Supplier || '').localeCompare(b.Supplier || ''));
 
             const suppliers = sortedKpis.map(k => k.Supplier);
-            const deliveryDays = sortedKpis.map(k => k.Avg_Delivery_Days || 0);
-            const defectRates = sortedKpis.map(k => k.Defect_Rate_Percent || 0);
-            const totalOrders = sortedKpis.map(k => k.Total_Orders);
+            const deliveryDays = sortedKpis.map(k => Number(k.Avg_Delivery_Days || 0));
+            const defectRates = sortedKpis.map(k => Number(k.Defect_Rate_Percent || 0));
+            const totalOrders = sortedKpis.map(k => Number(k.Total_Orders || 0));
 
             // Destroy existing charts if they exist
             if (deliveryChart) deliveryChart.destroy();
@@ -606,31 +615,73 @@
             tbody.innerHTML = '';
 
             kpis.forEach(kpi => {
-                const defectRateClass = kpi.Defect_Rate_Percent > 10 ? 'bad-metric' : 
-                                       kpi.Defect_Rate_Percent > 5 ? 'warning-metric' : 'good-metric';
+                const defectRate = Number(kpi.Defect_Rate_Percent || 0);
+                const rawAvgDelivery = kpi.Avg_Delivery_Days;
+                const avgDelivery = Number(rawAvgDelivery || 0);
+                const defectRateClass = defectRate > 10 ? 'bad-metric' :
+                                       defectRate > 5 ? 'warning-metric' : 'good-metric';
                 
-                const deliveryClass = kpi.Avg_Delivery_Days > 14 ? 'bad-metric' :
-                                     kpi.Avg_Delivery_Days > 7 ? 'warning-metric' : 'good-metric';
+                const deliveryClass = avgDelivery > 14 ? 'bad-metric' :
+                                     avgDelivery > 7 ? 'warning-metric' : 'good-metric';
 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${kpi.Supplier}</strong></td>
-                    <td>${kpi.Total_Orders}</td>
-                    <td>${kpi.Total_Quantity_Received}</td>
-                    <td>${kpi.Total_Defective}</td>
-                    <td class="${defectRateClass}">${kpi.Defect_Rate_Percent?.toFixed(2) || '0.00'}%</td>
-                    <td class="${deliveryClass}">${kpi.Avg_Delivery_Days?.toFixed(1) || 'N/A'} days</td>
-                    <td>${kpi.Accepted_Count}</td>
-                    <td>${kpi.Rejected_Count}</td>
-                    <td>${kpi.Last_Order_Date ? new Date(kpi.Last_Order_Date).toLocaleDateString() : 'N/A'}</td>
-                `;
+
+                const supplierCell = document.createElement('td');
+                const supplierLabel = document.createElement('strong');
+                supplierLabel.textContent = kpi.Supplier || 'Unknown Supplier';
+                supplierCell.appendChild(supplierLabel);
+                tr.appendChild(supplierCell);
+
+                const totalOrdersCell = document.createElement('td');
+                totalOrdersCell.textContent = String(Number(kpi.Total_Orders || 0));
+                tr.appendChild(totalOrdersCell);
+
+                const totalQtyCell = document.createElement('td');
+                totalQtyCell.textContent = String(Number(kpi.Total_Quantity_Received || 0));
+                tr.appendChild(totalQtyCell);
+
+                const totalDefectiveCell = document.createElement('td');
+                totalDefectiveCell.textContent = String(Number(kpi.Total_Defective || 0));
+                tr.appendChild(totalDefectiveCell);
+
+                const defectRateCell = document.createElement('td');
+                defectRateCell.className = defectRateClass;
+                defectRateCell.textContent = `${formatMetric(defectRate, 2)}%`;
+                tr.appendChild(defectRateCell);
+
+                const deliveryCell = document.createElement('td');
+                deliveryCell.className = deliveryClass;
+                deliveryCell.textContent = rawAvgDelivery !== null && rawAvgDelivery !== undefined
+                    ? `${formatMetric(avgDelivery, 1, '0.0')} days`
+                    : 'N/A';
+                tr.appendChild(deliveryCell);
+
+                const acceptedCell = document.createElement('td');
+                acceptedCell.textContent = String(Number(kpi.Accepted_Count || 0));
+                tr.appendChild(acceptedCell);
+
+                const rejectedCell = document.createElement('td');
+                rejectedCell.textContent = String(Number(kpi.Rejected_Count || 0));
+                tr.appendChild(rejectedCell);
+
+                const lastOrderCell = document.createElement('td');
+                lastOrderCell.textContent = kpi.Last_Order_Date
+                    ? new Date(kpi.Last_Order_Date).toLocaleDateString()
+                    : 'N/A';
+                tr.appendChild(lastOrderCell);
+
                 tbody.appendChild(tr);
             });
         }
 
         function showMessage(text, type) {
             const container = document.getElementById('messageContainer');
-            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+            container.innerHTML = '';
+
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.appendChild(message);
         }
     </script>
 </body>
