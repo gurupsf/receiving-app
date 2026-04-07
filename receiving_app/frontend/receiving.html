@@ -6,6 +6,23 @@
     <title>Receiving Form - Material Receipt</title>
     <link rel="icon" type="image/png" href="/static/image.png">
     <style>
+        :root {
+            --bg: #eef3f8;
+            --surface: #ffffff;
+            --surface-alt: #f6f9fc;
+            --surface-accent: #eef6ff;
+            --line: #d5dfeb;
+            --text: #132033;
+            --muted: #5c687a;
+            --primary: #165a96;
+            --primary-strong: #0f4778;
+            --success: #1f7a45;
+            --danger: #b42318;
+            --warning: #b26b00;
+            --shadow: 0 18px 42px rgba(16, 42, 67, 0.08);
+            --shadow-soft: 0 10px 24px rgba(16, 42, 67, 0.06);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,34 +30,55 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000;
+            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #f8fbfd 0%, #eef3f8 55%, #e7edf5 100%);
             min-height: 100vh;
-            padding: 15px;
-            color: white;
+            padding: 24px;
+            color: var(--text);
         }
 
         .container {
-            max-width: 100%;
+            max-width: 1480px;
             margin: 0 auto;
-            background: #1a1a1a;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
         }
 
         .header {
-            background: #0d47a1;
-            color: white;
-            padding: 25px;
-            text-align: center;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
         }
 
         .header-content {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            gap: 25px;
+            gap: 24px;
+            padding: 32px 32px 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .brand-logo {
+            width: 92px;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 10px;
         }
 
         .header-text {
@@ -49,53 +87,142 @@
         }
 
         .header-text h1 {
-            font-size: 40px;
+            font-size: clamp(2.1rem, 4vw, 3.1rem);
             margin-bottom: 10px;
-            font-weight: bold;
+            font-weight: 700;
+            line-height: 1.05;
+            color: var(--text);
         }
 
         .header-text p {
-            font-size: 18px;
-            opacity: 0.9;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--muted);
+            max-width: 62ch;
         }
 
         .nav-links {
             display: flex;
-            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 12px;
+            align-self: center;
         }
 
         .nav-links a {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            color: white;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
             text-decoration: none;
-            transition: all 0.3s;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
             font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-soft);
         }
 
-        .nav-links a:hover {
-            background: rgba(66, 165, 245, 0.3);
-            border-color: #42a5f5;
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .page-summary {
+            display: grid;
+            grid-template-columns: 1.6fr repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            padding: 0 32px 32px;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px 20px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .summary-card.summary-intro {
+            background: linear-gradient(135deg, #165a96 0%, #0f4778 100%);
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .summary-step {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .summary-card.summary-intro .summary-step {
+            color: rgba(255, 255, 255, 0.76);
+        }
+
+        .summary-card h2,
+        .summary-card h3 {
+            font-size: 18px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .summary-card p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: inherit;
+            opacity: 0.92;
         }
 
         .form-wrapper {
-            padding: 40px;
+            padding: 28px 0 0;
         }
 
         .form-section {
-            margin-bottom: 30px;
+            margin-bottom: 18px;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .lookup-section {
+            background: linear-gradient(180deg, #f5fbf8 0%, #ffffff 100%);
         }
 
         .section-title {
-            background: #2a2a2a;
-            padding: 12px 15px;
-            border-left: 4px solid #2196f3;
+            margin-bottom: 8px;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .section-subtitle {
             margin-bottom: 20px;
-            font-size: 20px;
-            font-weight: 600;
-            color: #42a5f5;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--muted);
+        }
+
+        .details-panel {
+            display: none;
+            background: var(--surface-alt);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-top: 12px;
+        }
+
+        .details-panel strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text);
         }
 
         .form-group {
@@ -106,234 +233,253 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #fff;
-            font-size: 16px;
+            color: var(--text);
+            font-size: 15px;
         }
 
         .form-group.required label::after {
-            content: ' *';
-            color: #e74c3c;
-            font-weight: bold;
+            content: " *";
+            color: var(--danger);
+            font-weight: 700;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #444;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 13px 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            font-size: 15px;
             font-family: inherit;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background: #2a2a2a;
-            color: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #7a8799;
         }
 
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #2196f3;
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(22, 90, 150, 0.14);
+            background: #ffffff;
         }
 
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 20px;
         }
 
         .form-row.two-col {
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .form-row.full {
             grid-template-columns: 1fr;
         }
 
-        /* Status Radio Buttons */
         .status-group {
-            display: flex;
-            gap: 40px;
-            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
         }
 
         .status-group label {
             display: flex;
             align-items: center;
+            gap: 12px;
             margin-bottom: 0;
-            font-weight: 500;
+            padding: 14px 16px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--surface-alt);
+            font-weight: 600;
             cursor: pointer;
-            color: white;
-            font-size: 16px;
+            color: var(--text);
+            font-size: 15px;
         }
 
         .status-group input[type="radio"] {
-            width: auto;
-            margin-right: 10px;
-            cursor: pointer;
-            accent-color: #2196f3;
             width: 18px;
             height: 18px;
-        }
-
-        /* File Upload Styles */
-        .file-upload-section {
-            margin-top: 20px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--primary);
         }
 
         .file-upload-wrapper {
             position: relative;
-            border: 2px dashed #444;
-            border-radius: 5px;
-            padding: 30px;
+            border: 1.5px dashed #9fb4c8;
+            border-radius: 18px;
+            padding: 26px;
             text-align: center;
-            transition: border-color 0.3s, background-color 0.3s;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
             cursor: pointer;
-            background: #2a2a2a;
+            background: #f8fbfd;
             margin-bottom: 15px;
         }
 
         .file-upload-wrapper:hover {
-            border-color: #2196f3;
-            background-color: #333;
+            border-color: var(--primary);
+            background-color: var(--surface-accent);
         }
 
         .file-upload-wrapper input[type="file"] {
             display: none;
         }
 
-        .upload-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
         .upload-text {
-            color: #aaa;
-            font-size: 16px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
         }
 
         .upload-text strong {
-            color: #2196f3;
+            display: block;
+            color: var(--primary);
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+
+        .upload-text small {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 13px;
         }
 
         .image-preview-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
             margin-top: 20px;
         }
 
         .image-preview {
             position: relative;
-            border-radius: 5px;
+            border-radius: 16px;
             overflow: hidden;
-            background: #f8f9fa;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-soft);
         }
 
         .image-preview img {
             width: 100%;
-            height: 150px;
+            height: 170px;
             object-fit: cover;
         }
 
         .image-preview-name {
-            padding: 8px;
+            padding: 10px 12px;
             font-size: 13px;
-            text-align: center;
-            word-break: break-all;
-            color: #aaa;
-            background: #2a2a2a;
+            text-align: left;
+            word-break: break-word;
+            color: var(--text);
+            background: var(--surface);
         }
 
         .image-remove-btn {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.94);
+            color: var(--danger);
+            border: 1px solid rgba(180, 35, 24, 0.18);
+            border-radius: 999px;
+            padding: 6px 10px;
             cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s;
+            font-size: 12px;
+            font-weight: 700;
+            transition: background 0.2s ease;
+            box-shadow: var(--shadow-soft);
         }
 
         .image-remove-btn:hover {
-            background: #c0392b;
+            background: #fff5f4;
         }
 
         .packing-slip-preview {
-            max-width: 300px;
-            margin: 15px auto;
+            max-width: 360px;
+            margin: 16px auto 0;
         }
 
-        /* Buttons */
         .button-group {
             display: flex;
-            gap: 15px;
+            gap: 16px;
             margin-top: 30px;
+            padding: 18px;
             justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            bottom: 18px;
+            backdrop-filter: blur(8px);
         }
 
         .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            letter-spacing: 0.01em;
+            text-transform: none;
+            font-family: inherit;
         }
 
         .btn-submit {
-            background: #2196f3;
+            background: var(--primary);
             color: white;
+            border: none;
             flex: 1;
-            font-size: 16px;
+            box-shadow: 0 14px 26px rgba(22, 90, 150, 0.22);
         }
 
         .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.4);
-            background: #1976d2;
+            transform: translateY(-1px);
+            box-shadow: 0 18px 30px rgba(22, 90, 150, 0.28);
+            background: var(--primary-strong);
         }
 
         .btn-submit:disabled {
-            opacity: 0.6;
+            opacity: 0.65;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .btn-reset {
-            background: #555;
-            color: white;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--line);
             flex: 1;
-            font-size: 16px;
         }
 
         .btn-reset:hover {
-            background: #666;
+            background: var(--surface-alt);
         }
 
-        /* Loading & Messages */
         .loader {
             display: none;
-            border: 4px solid #444;
-            border-top: 4px solid #2196f3;
+            border: 4px solid #dbe5f0;
+            border-top: 4px solid var(--primary);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 34px;
+            height: 34px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -342,24 +488,25 @@
         }
 
         .message {
-            padding: 15px;
-            border-radius: 5px;
+            padding: 15px 16px;
+            border-radius: 14px;
             margin-bottom: 20px;
             display: none;
-            animation: slideDown 0.3s ease-out;
+            animation: slideDown 0.25s ease-out;
+            border: 1px solid transparent;
         }
 
         .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #edf8f1;
+            color: #195b33;
+            border-color: #c6e7d0;
             display: block;
         }
 
         .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #fff2f0;
+            color: #8c2a20;
+            border-color: #f2c6c0;
             display: block;
         }
 
@@ -376,22 +523,62 @@
 
         .helper-text {
             font-size: 13px;
-            color: #aaa;
-            margin-top: 5px;
+            color: var(--muted);
+            margin-top: 6px;
+            line-height: 1.45;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1080px) {
+            .page-summary,
             .form-row {
                 grid-template-columns: 1fr;
             }
-            
-            .header-content {
-                flex-direction: column;
+
+            .form-row.two-col,
+            .status-group {
+                grid-template-columns: 1fr;
             }
-            
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 14px;
+            }
+
+            .header-content,
+            .brand {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .page-summary,
+            .header-content {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .page-summary {
+                padding-bottom: 20px;
+            }
+
             .nav-links {
                 width: 100%;
+                justify-content: flex-start;
+            }
+
+            .nav-links a {
+                width: 100%;
+                text-align: center;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .button-group {
                 flex-direction: column;
+                position: static;
+                padding: 14px;
             }
         }
     </style>
@@ -400,13 +587,40 @@
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <div class="header-text">
-                    <h1>📦 Receiving Form</h1>
-                    <p>Material Receipt & Inspection</p>
+                <div class="brand">
+                    <img class="brand-logo" src="/static/logo.png" alt="Receiving application logo">
+                    <div class="header-text">
+                        <div class="eyebrow">Manufacturing Receiving</div>
+                        <h1>Receiving Station</h1>
+                        <p>Capture every material arrival with the PO, quantity check, inspection status, and supporting photos before it moves to production.</p>
+                    </div>
                 </div>
                 <div class="nav-links">
-                    <a href="/receiving-data">View Data</a>
-                    <a href="/supplier-dashboard">Supplier Dashboard</a>
+                    <a href="/receiving" class="active">New Receipt</a>
+                    <a href="/receiving-data">Receiving Log</a>
+                    <a href="/supplier-dashboard">Supplier Performance</a>
+                </div>
+            </div>
+            <div class="page-summary">
+                <div class="summary-card summary-intro">
+                    <span class="summary-step">Workflow</span>
+                    <h2>Built for dock receipt, inspection, and handoff</h2>
+                    <p>Use the purchase order lookup when possible, confirm the received quantity, and attach traceability evidence before release to stores or the line.</p>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-step">Step 1</span>
+                    <h3>Find the PO</h3>
+                    <p>Search by PO number or business name to prefill project, supplier, and line-item details.</p>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-step">Step 2</span>
+                    <h3>Verify the receipt</h3>
+                    <p>Check the ordered quantity, actual receipt, and any defective count before material is staged.</p>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-step">Step 3</span>
+                    <h3>Attach evidence</h3>
+                    <p>Add the packing slip and item photos so planning, QA, and purchasing can trace issues quickly.</p>
                 </div>
             </div>
         </div>
@@ -416,40 +630,38 @@
             <div id="loader" class="loader"></div>
 
             <form id="receivingForm" enctype="multipart/form-data">
-                <!-- PO Lookup Section (NEW) -->
-                <div class="form-section" style="background: #2a3f2a; padding: 20px; border-radius: 5px;">
-                    <div class="section-title" style="border-color: #4caf50; color: #81c784;">
-                        🔍 PO Lookup (Optional - Auto-fill from existing PO)
-                    </div>
+                <div class="form-section lookup-section">
+                    <div class="section-title">PO Lookup</div>
+                    <div class="section-subtitle">Optional, but recommended for live receiving. Start with the purchase order to reduce manual entry and prevent mismatched line items.</div>
                     <div class="form-row two-col">
                         <div class="form-group">
-                            <label for="poSearch">Search PO Number or Vendor</label>
-                            <input type="text" id="poSearch" placeholder="Type to search POs...">
-                            <div class="helper-text">Search existing POs to auto-populate fields</div>
+                            <label for="poSearch">Search PO Number or Business</label>
+                            <input type="text" id="poSearch" placeholder="Search by PO number or business name">
+                            <div class="helper-text">Type at least two characters to load matching purchase orders.</div>
                         </div>
                         <div class="form-group">
-                            <label for="poSelect">Select PO</label>
+                            <label for="poSelect">Select Purchase Order</label>
                             <select id="poSelect" disabled>
-                                <option value="">Search first...</option>
+                                <option value="">Search above to load purchase orders...</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="poItemSelect">Select PO Item</label>
+                        <label for="poItemSelect">Select Line Item</label>
                         <select id="poItemSelect" disabled>
-                            <option value="">Select PO first...</option>
+                            <option value="">Select a purchase order first...</option>
                         </select>
-                        <div class="helper-text">Choose the specific item from the PO</div>
+                        <div class="helper-text">Choose the exact line item you are receiving so the material and quantity fields can be prefilled.</div>
                     </div>
-                    <div id="poItemDetails" style="display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; margin-top: 10px;">
-                        <strong>📦 Selected Item Details:</strong>
+                    <div id="poItemDetails" class="details-panel">
+                        <strong>Selected Line Item</strong>
                         <div id="poItemInfo" style="margin-top: 10px; font-size: 14px; line-height: 1.6;"></div>
                     </div>
                 </div>
 
-                <!-- Project & Drawing Info -->
                 <div class="form-section">
-                    <div class="section-title">📋 Project Information</div>
+                    <div class="section-title">Project Information</div>
+                    <div class="section-subtitle">Confirm the project, drawing, and PO before the material is moved into stock or to a work center.</div>
                     <div class="form-row">
                         <div class="form-group required">
                             <label for="project">Project Number</label>
@@ -473,9 +685,9 @@
                     </div>
                 </div>
 
-                <!-- Material Information -->
                 <div class="form-section">
-                    <div class="section-title">🔧 Material Details</div>
+                    <div class="section-title">Material Details</div>
+                    <div class="section-subtitle">Record the material description, supplier, and order timing used for planning and vendor follow-up.</div>
                     <div class="form-row">
                         <div class="form-group required">
                             <label for="materialId">Material ID / Description</label>
@@ -497,9 +709,9 @@
                     </div>
                 </div>
 
-                <!-- Quantity Information -->
                 <div class="form-section">
-                    <div class="section-title">📊 Quantity & Status</div>
+                    <div class="section-title">Quantity and Disposition</div>
+                    <div class="section-subtitle">Capture what actually arrived and whether the lot is acceptable for stock or needs to be held for review.</div>
                     <div class="form-row">
                         <div class="form-group required">
                             <label for="quantityOrdered">Quantity Ordered</label>
@@ -517,6 +729,7 @@
                             <label for="defectiveCount">Defective Count</label>
                             <input type="number" id="defectiveCount" name="defectiveCount" 
                                    min="0" value="0" required placeholder="0">
+                            <div class="helper-text">Enter the quantity that is damaged, mislabeled, or otherwise not ready for release.</div>
                         </div>
                     </div>
 
@@ -525,34 +738,34 @@
                         <div class="status-group">
                             <label>
                                 <input type="radio" name="itemStatus" value="Accepted" checked>
-                                ✅ Accepted
+                                Accepted for stock
                             </label>
                             <label>
                                 <input type="radio" name="itemStatus" value="Rejected">
-                                ❌ Rejected
+                                Rejected or on hold
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Notes -->
                 <div class="form-section">
-                    <div class="section-title">📝 Additional Notes</div>
+                    <div class="section-title">Additional Notes</div>
+                    <div class="section-subtitle">Use notes for shortages, packaging damage, overages, or any detail the next team needs to act on.</div>
                     <div class="form-group">
                         <label for="notes">Notes</label>
                         <textarea id="notes" name="notes" rows="3" 
-                                  placeholder="Enter any additional notes or comments..."></textarea>
+                                  placeholder="Record shortages, damage, replacements, hold reasons, or other handoff notes..."></textarea>
                     </div>
                 </div>
 
-                <!-- Packing Slip Photo -->
                 <div class="form-section">
-                    <div class="section-title">📄 Packing Slip Photo</div>
+                    <div class="section-title">Packing Slip</div>
+                    <div class="section-subtitle">Attach the supplier packing slip to keep receiving, purchasing, and planning aligned on the same shipment record.</div>
                     <div class="file-upload-wrapper" onclick="document.getElementById('packingSlip').click()">
-                        <div class="upload-icon">📄</div>
                         <div class="upload-text">
-                            <strong>Click to upload</strong> packing slip photo<br>
-                            <small>PNG, JPG, JPEG (Max 10MB)</small>
+                            <strong>Select packing slip image</strong>
+                            Upload a clear photo from a phone, tablet, or workstation.
+                            <small>Accepted formats: PNG, JPG, JPEG. Maximum file size: 10 MB.</small>
                         </div>
                         <input type="file" id="packingSlip" name="packingSlip" 
                                accept="image/*" onchange="handlePackingSlipUpload(event)">
@@ -560,14 +773,14 @@
                     <div id="packingSlipPreview" class="packing-slip-preview"></div>
                 </div>
 
-                <!-- Item Photos -->
                 <div class="form-section">
-                    <div class="section-title">📸 Item Photos</div>
+                    <div class="section-title">Item Photos</div>
+                    <div class="section-subtitle">Add photos when part condition, labeling, or packaging needs documentation for traceability or supplier feedback.</div>
                     <div class="file-upload-wrapper" onclick="document.getElementById('itemPhotos').click()">
-                        <div class="upload-icon">📸</div>
                         <div class="upload-text">
-                            <strong>Click to upload</strong> item photos<br>
-                            <small>PNG, JPG, JPEG (Multiple files allowed)</small>
+                            <strong>Select item photos</strong>
+                            Add one or more images of the material, packaging, or labels.
+                            <small>Accepted formats: PNG, JPG, JPEG. Multiple files are allowed.</small>
                         </div>
                         <input type="file" id="itemPhotos" name="itemPhotos" 
                                accept="image/*" multiple onchange="handleItemPhotosUpload(event)">
@@ -575,13 +788,12 @@
                     <div id="itemPhotosPreview" class="image-preview-container"></div>
                 </div>
 
-                <!-- Submit Buttons -->
                 <div class="button-group">
                     <button type="submit" class="btn btn-submit">
-                        📦 Submit Receiving
+                        Submit Receiving Record
                     </button>
                     <button type="reset" class="btn btn-reset">
-                        🔄 Reset Form
+                        Clear Form
                     </button>
                 </div>
             </form>
@@ -618,7 +830,11 @@
         async function loadProjects() {
             try {
                 const response = await fetch('/api/projects');
-                const projects = await response.json();
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'Failed to load projects');
+                }
+                const projects = Array.isArray(payload) ? payload : [];
                 const select = document.getElementById('project');
                 
                 projects.forEach(p => {
@@ -646,7 +862,7 @@
                 const query = e.target.value.trim();
                 
                 if (query.length < 2) {
-                    poSelect.innerHTML = '<option value="">Search first...</option>';
+                    poSelect.innerHTML = '<option value="">Search above to load purchase orders...</option>';
                     poSelect.disabled = true;
                     return;
                 }
@@ -660,7 +876,7 @@
             poSelect.addEventListener('change', async (e) => {
                 const poIdentifier = e.target.value;
                 if (!poIdentifier) {
-                    poItemSelect.innerHTML = '<option value="">Select PO first...</option>';
+                    poItemSelect.innerHTML = '<option value="">Select a purchase order first...</option>';
                     poItemSelect.disabled = true;
                     document.getElementById('poItemDetails').style.display = 'none';
                     return;
@@ -686,13 +902,19 @@
         async function searchPos(query) {
             try {
                 const response = await fetch(`/api/pos?search=${encodeURIComponent(query)}`);
-                const pos = await response.json();
-                
+                const payload = await response.json();
                 const poSelect = document.getElementById('poSelect');
-                poSelect.innerHTML = '<option value="">Select a PO...</option>';
+                
+                poSelect.innerHTML = '<option value="">Select a purchase order...</option>';
+
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'PO search failed');
+                }
+
+                const pos = Array.isArray(payload) ? payload : [];
                 
                 if (pos.length === 0) {
-                    poSelect.innerHTML = '<option value="">No POs found</option>';
+                    poSelect.innerHTML = '<option value="">No purchase orders found</option>';
                     poSelect.disabled = true;
                     return;
                 }
@@ -700,7 +922,7 @@
                 pos.forEach(po => {
                     const option = document.createElement('option');
                     option.value = po.po_number;
-                    option.textContent = `${po.po_number} - ${po.vendor_name || 'Unknown Vendor'}`;
+                    option.textContent = `${po.po_number} - ${po.vendor_name || 'Unknown business'}`;
                     poSelect.appendChild(option);
                 });
                 
@@ -713,13 +935,19 @@
         async function loadPoItems(poIdentifier) {
             try {
                 const response = await fetch(`/api/pos/${encodeURIComponent(poIdentifier)}/items`);
-                const items = await response.json();
+                const payload = await response.json();
                 
                 const poItemSelect = document.getElementById('poItemSelect');
-                poItemSelect.innerHTML = '<option value="">Select an item...</option>';
+                poItemSelect.innerHTML = '<option value="">Select a line item...</option>';
+
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'Failed to load PO items');
+                }
+
+                const items = Array.isArray(payload) ? payload : [];
                 
                 if (items.length === 0) {
-                    poItemSelect.innerHTML = '<option value="">No items found</option>';
+                    poItemSelect.innerHTML = '<option value="">No line items found</option>';
                     poItemSelect.disabled = true;
                     return;
                 }
@@ -729,7 +957,7 @@
                     option.value = item.item_id;
                     
                     // Build display text
-                    const partInfo = item.part || 'Unknown Part';
+                    const partInfo = item.part || 'Unknown part';
                     const modifier = item.modifier ? ` - ${item.modifier}` : '';
                     const qtyInfo = `Qty: ${item.qty_ordered || 0}`;
                     
@@ -823,7 +1051,7 @@
                 }
             }
             
-            showMessage('✅ Form auto-populated from PO item', 'success');
+            showMessage('Form populated from the selected PO item.', 'success');
         }
 
         document.getElementById('project').addEventListener('change', async (e) => {
@@ -836,7 +1064,11 @@
             if (projectId) {
                 try {
                     const response = await fetch(`/api/drawings?projectId=${projectId}`);
-                    const drawings = await response.json();
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload.detail || 'Failed to load drawings');
+                    }
+                    const drawings = Array.isArray(payload) ? payload : [];
                     
                     drawings.forEach(d => {
                         const option = document.createElement('option');
@@ -880,7 +1112,7 @@
                 div.innerHTML = `
                     <img src="${e.target.result}" alt="Packing Slip">
                     <div class="image-preview-name">${escapeHtml(file.name)}</div>
-                    <button type="button" class="image-remove-btn" onclick="removePackingSlip()">×</button>
+                    <button type="button" class="image-remove-btn" onclick="removePackingSlip()">Remove</button>
                 `;
                 preview.appendChild(div);
             };
@@ -911,7 +1143,7 @@
                     div.innerHTML = `
                         <img src="${e.target.result}" alt="Item Photo">
                         <div class="image-preview-name">${escapeHtml(file.name)}</div>
-                        <button type="button" class="image-remove-btn" onclick="removeItemPhoto(${index})">×</button>
+                        <button type="button" class="image-remove-btn" onclick="removeItemPhoto(${index})">Remove</button>
                     `;
                     container.appendChild(div);
                 };
@@ -972,7 +1204,7 @@
                 const result = await response.json();
                 
                 if (response.ok) {
-                    showMessage(`✅ Receiving submitted successfully! ID: ${result.receiving_id}`, 'success');
+                    showMessage(`Receiving record submitted. ID: ${result.receiving_id}`, 'success');
                     e.target.reset();
                     itemPhotosFiles = [];
                     packingSlipFile = null;
@@ -983,17 +1215,17 @@
                     document.getElementById('poSelect').disabled = true;
                     document.getElementById('poItemSelect').disabled = true;
                     document.getElementById('poItemDetails').style.display = 'none';
-                    document.getElementById('poSelect').innerHTML = '<option value="">Search first...</option>';
-                    document.getElementById('poItemSelect').innerHTML = '<option value="">Select PO first...</option>';
+                    document.getElementById('poSelect').innerHTML = '<option value="">Search above to load purchase orders...</option>';
+                    document.getElementById('poItemSelect').innerHTML = '<option value="">Select a purchase order first...</option>';
                     
                     // Reset to today's date
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('orderDate').value = today;
                 } else {
-                    showMessage('❌ Error: ' + (result.detail || 'Submission failed'), 'error');
+                    showMessage(result.detail || 'Submission failed.', 'error');
                 }
             } catch (error) {
-                showMessage('❌ Error: ' + error.message, 'error');
+                showMessage(error.message || 'Submission failed.', 'error');
             } finally {
                 submitBtn.disabled = false;
                 loader.style.display = 'none';

@@ -324,10 +324,10 @@ def fetch_active_pos(project_id: str = None):
             PO.StringID AS po_number,
             PO.Date AS order_date,
             PO.DateNeeded AS date_needed,
-            V.Name AS vendor_name,
+            COALESCE(B.ScreenDescription, B.Description, B.AbbreviatedDesc) AS vendor_name,
             PO.Status AS status
         FROM [dbo].[PO] PO
-        LEFT JOIN [dbo].[Vendor] V ON PO.Vendor = V.ID
+        LEFT JOIN [dbo].[Business] B ON PO.Vendor = B.ID
         INNER JOIN [dbo].[PO_Item] PI ON PO.ID = PI.PO
         WHERE PO.Void = 0
         AND PI.Void = 0
@@ -363,7 +363,7 @@ def fetch_po_items(po_id: int = None, po_string_id: str = None):
             PO.ID AS po_id,
             PO.StringID AS po_number,
             PO.Date AS po_date,
-            V.Name AS vendor_name,
+            COALESCE(B.ScreenDescription, B.Description, B.AbbreviatedDesc) AS vendor_name,
             COALESCE(P.Description, CAST(PI.Part AS varchar(50))) AS part,
             PI.Modifier AS modifier,
             PI.Part AS part_id,
@@ -379,7 +379,7 @@ def fetch_po_items(po_id: int = None, po_string_id: str = None):
             CAST(PI.Drawing AS varchar(50)) AS drawing_id
         FROM [dbo].[PO] PO
         INNER JOIN [dbo].[PO_Item] PI ON PO.ID = PI.PO
-        LEFT JOIN [dbo].[Vendor] V ON PO.Vendor = V.ID
+        LEFT JOIN [dbo].[Business] B ON PO.Vendor = B.ID
         LEFT JOIN [dbo].[Part] P ON PI.Part = P.ID
         LEFT JOIN [dbo].[Project_Phase] D ON PI.Drawing = D.ID
         WHERE {where_clause}
@@ -407,18 +407,27 @@ def search_pos(search_term: str = None):
             PO.ID AS po_id,
             PO.StringID AS po_number,
             PO.Date AS order_date,
-            V.Name AS vendor_name,
+            COALESCE(B.ScreenDescription, B.Description, B.AbbreviatedDesc) AS vendor_name,
             PO.Status AS status,
             COUNT(PI.ID) AS item_count
         FROM [dbo].[PO] PO
-        LEFT JOIN [dbo].[Vendor] V ON PO.Vendor = V.ID
+        LEFT JOIN [dbo].[Business] B ON PO.Vendor = B.ID
         LEFT JOIN [dbo].[PO_Item] PI ON PO.ID = PI.PO AND PI.Void = 0
         WHERE PO.Void = 0
         AND (
             PO.StringID LIKE :search_pattern
-            OR V.Name LIKE :search_pattern
+            OR B.Description LIKE :search_pattern
+            OR B.ScreenDescription LIKE :search_pattern
+            OR B.AbbreviatedDesc LIKE :search_pattern
         )
-        GROUP BY PO.ID, PO.StringID, PO.Date, V.Name, PO.Status
+        GROUP BY
+            PO.ID,
+            PO.StringID,
+            PO.Date,
+            B.ScreenDescription,
+            B.Description,
+            B.AbbreviatedDesc,
+            PO.Status
         ORDER BY PO.StringID DESC
     """)
     
