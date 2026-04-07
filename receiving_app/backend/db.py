@@ -89,11 +89,6 @@ def get_metadata_engine() -> Engine:
 
 
 
-def get_submissions_table() -> str:
-    return os.getenv("SUBMISSIONS_TABLE", "[dbo].[WarehouseSubmissions]")
-
-
-
 
 
 
@@ -135,115 +130,6 @@ def fetch_drawings(project_id: str):
     """)
     with engine.connect() as conn:
         return [dict(r._mapping) for r in conn.execute(sql_stmt, {"project_id": project_id})]
-
-def fetch_all_qa_submissions(project_id: str = None, drawing: str = None):
-    """
-    Returns all QA submissions with optional filtering by project and drawing.
-    """
-    # Use write_engine for reads as well (READ_ prefix is not configured)
-    engine = get_write_engine()
-    params = {}
-    where_clause = ""
-    
-    if project_id:
-        where_clause += " AND Project = :project_id"
-        params["project_id"] = project_id
-    
-    if drawing:
-        where_clause += " AND Drawing = :drawing"
-        params["drawing"] = drawing
-    
-    sql_stmt = text(f"""
-        SELECT
-            ID,
-            Project,
-            Drawing,
-            Elevation,
-            RoomNumber,
-            Description,
-            QaCheck,
-            IssueCategory,
-            Resubmit,
-            Timestamp
-        FROM [dbo].[QA_Submissions]
-        WHERE 1=1{where_clause}
-        ORDER BY Timestamp DESC
-    """)
-    
-    with engine.connect() as conn:
-        rows = conn.execute(sql_stmt, params)
-        return [dict(r._mapping) for r in rows]
-
-def delete_qa_submission(engine: Engine, qa_id: int):
-    """
-    Deletes a QA submission by ID.
-    First fetches the submission details, then deletes the record.
-    Returns the submission details (project, drawing) for cleanup, or None if not found.
-    """
-    # First fetch the submission to get project and drawing info
-    fetch_stmt = text("""
-        SELECT Project, Drawing FROM [dbo].[QA_Submissions]
-        WHERE ID = :qa_id
-    """)
-    with engine.connect() as conn:
-        result = conn.execute(fetch_stmt, {"qa_id": qa_id})
-        row = result.fetchone()
-        if not row:
-            return None
-        project, drawing = row[0], row[1]
-    
-    # Now delete the submission
-    delete_stmt = text("""
-        DELETE FROM [dbo].[QA_Submissions]
-        WHERE ID = :qa_id
-    """)
-    with engine.begin() as conn:
-        result = conn.execute(delete_stmt, {"qa_id": qa_id})
-        if result.rowcount > 0:
-            return {"project": project, "drawing": drawing, "qa_id": qa_id}
-    
-    return None
-    
-# ---------- QA SUBMISSION COMMAND ----------
-def insert_qa_submission(engine: Engine, table_name: str, payload: dict):
-    """
-    Inserts one QA submission row into the QA_Submissions table.
-    Expected keys:
-      project, drawing, elevation, roomNumber, qaCheck, issueCategory, resubmit
-    Returns:
-      int: The ID of the inserted record
-    """
-    sql_stmt = text(f"""
-        INSERT INTO {table_name}
-        (
-            Project,
-            Drawing,
-            Elevation,
-            RoomNumber,
-            QaCheck,
-            IssueCategory,
-            Description,
-            Resubmit,
-            Timestamp
-        )
-        OUTPUT INSERTED.ID
-        VALUES
-        (
-            :project,
-            :drawing,
-            :elevation,
-            :roomNumber,
-            :qaCheck,
-            :Description,
-            :issueCategory,
-            :resubmit,
-            GETUTCDATE()
-        );
-    """)
-    with engine.begin() as conn:
-        result = conn.execute(sql_stmt, payload)
-        qa_id = result.fetchone()[0]
-        return qa_id
 
 
 # ---------- RECEIVING SUBMISSION FUNCTIONS ----------
@@ -438,12 +324,10 @@ def fetch_active_pos(project_id: str = None):
             PO.StringID as PO_Number,
             PO.Date as Order_Date,
             PO.DateNeeded as Date_Needed,
-            V.Name as Vendor_Name,
             PO.Status as Status
         FROM [dbo].[PO] PO
-        LEFT JOIN [dbo].[Vendor] V ON PO.Vendor = V.ID
         INNER JOIN [dbo].[PO_Item] PI ON PO.ID = PI.PO
-        WHERE PO.Void = 0 
+        WHERE PO.Void = 0
         AND PI.Void = 0
         {where_clause}
         ORDER BY PO.StringID DESC
@@ -472,14 +356,12 @@ def fetch_po_items(po_id: int = None, po_string_id: str = None):
         return []
     
     sql_stmt = text(f"""
-        SELECT 
+        SELECT
             PI.ID as POItem_ID,
             PO.ID as PO_ID,
             PO.StringID as PO_Number,
             PO.Date as Order_Date,
-            V.Name as Vendor_Name,
             PI.Modifier as Material_Description,
-            P.Description as Part_Description,
             PI.Part as Part_ID,
             PI.QtyOrdered as Qty_Ordered,
             PI.QtyReceived as Qty_Received,
@@ -487,15 +369,10 @@ def fetch_po_items(po_id: int = None, po_string_id: str = None):
             PI.Price,
             PI.ETA,
             PI.LastReceived,
-            PROJ.ID as Project_ID,
-            D.Description as Drawing_Description,
+            PI.Project as Project_ID,
             PI.Drawing as Drawing_ID
         FROM [dbo].[PO] PO
         INNER JOIN [dbo].[PO_Item] PI ON PO.ID = PI.PO
-        LEFT JOIN [dbo].[Vendor] V ON PO.Vendor = V.ID
-        LEFT JOIN [dbo].[Part] P ON PI.Part = P.ID
-        LEFT JOIN [dbo].[Project] PROJ ON PI.Project = PROJ.ID
-        LEFT JOIN [dbo].[Project_Phase] D ON PI.Drawing = D.ID
         WHERE {where_clause}
         AND PO.Void = 0
         AND PI.Void = 0
@@ -521,18 +398,13 @@ def search_pos(search_term: str = None):
             PO.ID as PO_ID,
             PO.StringID as PO_Number,
             PO.Date as Order_Date,
-            V.Name as Vendor_Name,
             PO.Status as Status,
             COUNT(PI.ID) as Item_Count
         FROM [dbo].[PO] PO
-        LEFT JOIN [dbo].[Vendor] V ON PO.Vendor = V.ID
         LEFT JOIN [dbo].[PO_Item] PI ON PO.ID = PI.PO AND PI.Void = 0
         WHERE PO.Void = 0
-        AND (
-            PO.StringID LIKE :search_pattern
-            OR V.Name LIKE :search_pattern
-        )
-        GROUP BY PO.ID, PO.StringID, PO.Date, V.Name, PO.Status
+        AND PO.StringID LIKE :search_pattern
+        GROUP BY PO.ID, PO.StringID, PO.Date, PO.Status
         ORDER BY PO.StringID DESC
     """)
     
